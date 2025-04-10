@@ -1,29 +1,116 @@
-<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Expense Tracker</title>
-    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
 </head>
-<body>
-    <div class="container">
-        <div class="input-section">
-            <h2>Expense Tracker</h2>
-            <select id="transaction-type">
-                <option value="income">Income</option>
-                <option value="expense">Expense</option>
-            </select>
-            <input type="text" id="transaction-name" placeholder="Transaction Name">
-            <input type="number" id="transaction-amount" placeholder="Amount (e.g. 100.00)" step="0.01">
-            <button onclick="addTransaction()">Add Transaction</button>
-        </div>
-        <div class="history-section">
-            <h3>Transaction History</h3>
-            <div class="expense-list" id="expense-list"></div>
-            <div class="total" id="total-balance">Total Balance: $0</div>
+<body class="bg-gray-50 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <h1 class="text-3xl font-bold text-center text-[#ff009d] mb-8">
+            <i class="fas fa-wallet mr-2"></i>Expense Tracker
+        </h1>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Expense Form -->
+                <div class="bg-[#f2f2f0] p-6 rounded-lg shadow-md lg:col-span-1">
+                    <h2 class="text-xl font-semibold mb-4 text-[#000000]">Add New Transaction</h2>
+                <form id="expenseForm" class="space-y-4">
+                    <div class="flex space-x-4">
+                        <div class="flex items-center">
+                            <input id="expenseType" name="transactionType" type="radio" value="expense" checked
+                                class="h-4 w-4 text-[#ff009d] focus:ring-[#ff009d] border-[#545454]">
+                            <label for="expenseType" class="ml-2 block text-sm text-[#545454]">Expense</label>
+                        </div>
+                        <div class="flex items-center">
+                            <input id="incomeType" name="transactionType" type="radio" value="income"
+                                class="h-4 w-4 text-[#ff009d] focus:ring-[#ff009d] border-[#545454]">
+                            <label for="incomeType" class="ml-2 block text-sm text-[#545454]">Income</label>
+                        </div>
+                    </div>
+                    <div>
+                        <label for="amount" class="block text-sm font-medium text-[#545454]">Amount</label>
+                        <input type="number" id="amount" step="0.01" required 
+                            class="mt-1 block w-full rounded-md border-[#545454] shadow-sm focus:border-[#ff009d] focus:ring-[#ff009d] p-2 border">
+                    </div>
+                    <div>
+                        <label for="category" class="block text-sm font-medium text-[#545454]">Category</label>
+                        <select id="category" required
+                            class="mt-1 block w-full rounded-md border-[#545454] shadow-sm focus:border-[#ff009d] focus:ring-[#ff009d] p-2 border">
+                            <option value="">Select a category</option>
+                            <option value="other">other</option>
+                            <option value="food">Food & Beverages</option>
+                            <option value="health">Health</option>
+                            <option value="education">Education</option>
+                            <option value="travel">Travel</option>
+                            <option value="shopping">Shopping</option>
+                            <option value="living">Living Expenses</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="description" class="block text-sm font-medium text-[#545454]">Description</label>
+                        <input type="text" id="description"
+                            class="mt-1 block w-full rounded-md border-[#545454] shadow-sm focus:border-[#ff009d] focus:ring-[#ff009d] p-2 border">
+                    </div>
+                    <button type="submit"
+                        class="w-full bg-[#000000] text-[#f2f2f0] py-2 px-4 rounded-md hover:bg-[#ff009d] focus:outline-none focus:ring-2 focus:ring-[#ff009d] focus:ring-offset-2">
+                        Add Transaction
+                    </button>
+                </form>
+            </div>
+
+            <!-- Chart and Summary -->
+            <div class="bg-white p-6 rounded-lg shadow-md lg:col-span-2 space-y-6">
+                <div>
+                    <h2 class="text-xl font-semibold mb-4 text-[#000000]">Transaction Summary</h2>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                        <div class="bg-[#f2f2f0] p-4 rounded-lg border border-[#545454]">
+                            <p class="text-sm text-[#545454]">Total Balance</p>
+                            <p id="totalBalance" class="text-2xl font-bold text-[#000000]">$0.00</p>
+                        </div>
+                        <div class="bg-[#f2f2f0] p-4 rounded-lg border border-[#545454]">
+                            <p class="text-sm text-[#545454]">Income</p>
+                            <p id="totalIncome" class="text-2xl font-bold text-[#000000]">$0.00</p>
+                        </div>
+                        <div class="bg-[#f2f2f0] p-4 rounded-lg border border-[#545454]">
+                            <p class="text-sm text-[#545454]">Expenses</p>
+                            <p id="totalExpenses" class="text-2xl font-bold text-[#000000]">$0.00</p>
+                        </div>
+                    </div>
+                    <div class="h-64">
+                        <canvas id="expenseChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Expense History -->
+                <div>
+                    <h2 class="text-xl font-semibold mb-4 text-[#000000]">Transaction History</h2>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-gray-200">
+                            <thead class="bg-[#f2f2f0]">
+                                <tr>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-[#545454] uppercase tracking-wider">Date</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-[#545454] uppercase tracking-wider">Category</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-[#545454] uppercase tracking-wider">Description</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-[#545454] uppercase tracking-wider">Amount</th>
+                                    <th class="px-6 py-3 text-left text-xs font-medium text-[#545454] uppercase tracking-wider">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="expenseHistory" class="bg-[#f2f2f0] divide-y divide-[#545454]">
+                                <!-- Expenses will be added here dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
+
     <script src="script.js"></script>
 </body>
 </html>
+
